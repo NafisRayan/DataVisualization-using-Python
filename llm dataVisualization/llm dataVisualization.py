@@ -1,48 +1,130 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
+import pandas as pd
+import networkx as nx
 
-# Data
-models = ["Bloom", "EleutherAI GPT-Neo", "Cohere Tiny", "OpenAI Whisper", "Meta AI LLaMA-Small"]
-parameters = [1.5e9, 2.7e9, 350e6, 1.2e9, 7e9]
-open_source = [True, True, False, True, True]
-nlp_tasks = [
-    "Text generation",
-    "Question answering",
-    "Translation",
-    "Text summarization",
-    "Summarization",
-    "Sentiment analysis",
-    "Speech recognition",
-    "Transcription"
-]
+db = {
+  "models": [
+    {
+      "name": "Bloom",
+      "parameters": 1.5e9,
+      "open_source": 'true',
+      "nlp_tasks": [
+        "Text generation",
+        "Question answering",
+        "Translation",
+        "Text summarization"
+      ],
+      "developed_by": "Google AI",
+      "resources": {
+        "Github": "https://github.com/google-research/bloom"
+      }
+    },
+    {
+      "name": "EleutherAI GPT-Neo",
+      "parameters": 2.7e9,
+      "open_source": 'true',
+      "nlp_tasks": [
+        "Text generation",
+        "Summarization",
+        "Question answering",
+        "Translation"
+      ],
+      "developed_by": "EleutherAI",
+      "resources": {
+        "Github": "https://github.com/EleutherAI/gpt-neo"
+      }
+    },
+    {
+      "name": "Cohere Tiny",
+      "parameters": 350e6,
+      "open_source": 'false',
+      "nlp_tasks": [
+        "Text generation",
+        "Summarization",
+        "Question answering",
+        "Sentiment analysis"
+      ],
+      "developed_by": "Cohere",
+      "resources": {
+        "Website": "https://cohere.ai/"
+      }
+    },
+    {
+      "name": "OpenAI Whisper",
+      "parameters": 1.2e9,
+      "open_source": 'true',
+      "nlp_tasks": [
+        "Speech recognition",
+        "Transcription",
+        "Translation"
+      ],
+      "developed_by": "OpenAI",
+      "resources": {
+        "Github": "https://github.com/openai/whisper"
+      }
+    },
+    {
+      "name": "Meta AI LLaMA-Small",
+      "parameters": 7e9,
+      "open_source": 'true',
+      "nlp_tasks": [
+        "Text generation",
+        "Question answering",
+        "Translation",
+        "Summarization"
+      ],
+      "developed_by": "Meta AI",
+      "resources": {
+        "Github": "https://github.com/facebookresearch/llama"
+      }
+    }
+  ]
+}
 
-# Pie Chart - Open Source vs Closed Source
-plt.figure(figsize=(8, 8))
-plt.pie(
-    [open_source.count(True), open_source.count(False)],
-    labels=["Open Source", "Closed Source"],
-    autopct='%1.1f%%',
-)
-plt.title('Open Source vs Closed Source Models')
+# Create a dataframe from the dictionary
+df = pd.DataFrame(db['models'])
+
+# Pie chart of NLP tasks
+tasks = df['nlp_tasks'].apply(lambda x: ', '.join(x))
+plt.figure(figsize=(10, 10))
+plt.pie(tasks.value_counts(), labels=tasks.value_counts().index, autopct='%1.1f%%')
+plt.title('Distribution of NLP Tasks')
 plt.show()
 
-# Bar Graph - Model Parameters
-plt.figure(figsize=(10, 8))
-plt.bar(models, parameters)
-plt.xticks(rotation=30)
+# Bar chart of parameters
+plt.figure(figsize=(10, 10))
+plt.bar(df['name'], df['parameters'])
+plt.title('Parameters of Language Models')
 plt.xlabel('Model Name')
-plt.ylabel('Number of Parameters')
-plt.title('Model Parameters Comparison')
+plt.ylabel('Parameters (billions)')
 plt.show()
 
-# Radar Chart - NLP Tasks
-fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+# Scatter plot of parameters vs. NLP tasks
+plt.figure(figsize=(10, 10))
+plt.scatter(df['parameters'], df['nlp_tasks'].apply(lambda x: len(x)))
+plt.title('Relationship between Parameters and NLP Tasks')
+plt.xlabel('Parameters (billions)')
+plt.ylabel('Number of NLP Tasks')
+plt.show()
 
-for i, model in enumerate(models):
-    tasks = np.array([1 if task in db['models'][i]['nlp_tasks'] else 0 for task in nlp_tasks])
-    plt.plot(tasks, label=model)
-    plt.fill(tasks, alpha=0.25)
-plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
-plt.title('NLP Tasks Supported by Models')
+# Bad diagram of model relationships
+G = nx.Graph()
+edges = []
+for i in range(len(df)):
+    for j in range(i+1, len(df)):
+        if df['nlp_tasks'][i] == df['nlp_tasks'][j]:
+            edges.append((df['name'][i], df['name'][j]))
+G.add_edges_from(edges)
+pos = nx.spring_layout(G)  # positions for all nodes
+
+# nodes
+nx.draw_networkx_nodes(G, pos, node_size=500)
+
+# edges
+nx.draw_networkx_edges(G, pos, alpha=0.5)
+
+# labels
+nx.draw_networkx_labels(G, pos, font_size=10)
+
+plt.axis('off')
 plt.show()
